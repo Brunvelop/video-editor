@@ -5,10 +5,12 @@ import { TrackRenderer } from "./TrackRenderer";
 
 interface MultiTrackCompositionProps {
   timeline: Timeline;
+  projectPath: string;
 }
 
 export const MultiTrackComposition: React.FC<MultiTrackCompositionProps> = ({
   timeline,
+  projectPath,
 }) => {
   const fps = timeline.fps;
 
@@ -26,13 +28,18 @@ export const MultiTrackComposition: React.FC<MultiTrackCompositionProps> = ({
       {/* Visual tracks: each wrapped in AbsoluteFill, stacked by zIndex order */}
       {visualTracks.map((track) => (
         <AbsoluteFill key={track.id}>
-          <TrackRenderer track={track} fps={fps} />
+          <TrackRenderer track={track} fps={fps} projectPath={projectPath} />
         </AbsoluteFill>
       ))}
 
       {/* Audio tracks: no AbsoluteFill needed */}
       {audioTracks.map((track) => (
-        <TrackRenderer key={track.id} track={track} fps={fps} />
+        <TrackRenderer
+          key={track.id}
+          track={track}
+          fps={fps}
+          projectPath={projectPath}
+        />
       ))}
     </AbsoluteFill>
   );
