@@ -445,4 +445,269 @@ def render_video(project_name: str, timeline: dict, output_path: str):
 
 ---
 
-Este es el diseño completo. ¿Quieres ajustar algo o empezamos a implementar? Si te parece bien, puedes toggle a Act Mode y arrancamos por el schema de tipos + el renderer multi-track como MVP.
+
+
+
+
+# Plan Commit a Commit
+
+---
+
+## Commit 1: `chore: remove CLI, generation deps and legacy files`
+
+**Eliminar todo lo que no es renderizado.**
+
+### Archivos a ELIMINAR:
+- `cli/cli.ts`
+- `cli/service.ts`
+- `cli/timeline.ts`
+- `.env.example` (ya no hay API keys)
+- `Promo.png` (promo del template original)
+- `public/content/history-of-venus/descriptor.json` (metadata de generación, no del renderer)
+
+### Archivos a MODIFICAR:
+
+**`package.json`** — Eliminar dependencias de generación + script `gen`:
+```diff
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion bundle",
+    "upgrade": "remotion upgrade",
+-   "lint": "eslint src && tsc",
+-   "gen": "bun cli/cli.ts"
++   "lint": "eslint src && tsc"
+  },
+```
+
+DevDependencies a **eliminar**:
+- `@elevenlabs/elevenlabs-js`
+- `@types/prompts`
+- `@types/uuid`
+- `@types/yargs`
+- `chalk`
+- `dotenv`
+- `ora`
+- `prompts`
+- `tsx`
+- `uuid`
+- `yargs`
+
+**`package.json`** — Cambiar nombre y descripción:
+```diff
+- "name": "template-ai-video",
++ "name": "video-editor",
+- "description": "Create AI videos using remotion",
++ "description": "Data-driven multi-track video renderer powered by Remotion",
+```
+
+**`README.md`** — Reescribir completamente. Ya no es un "AI video template", es un video editor. README mínimo por ahora:
+```md
+# Video Editor
+
+Data-driven multi-track video renderer powered by Remotion.
+
+## Usage
+
+1. Place assets + `timeline.json` in `public/content/{project-name}/`
+2. `npm run dev` to preview
+3. `npx remotion render {project-name} output.mp4` to render
+```
+
+**`src/lib/types.ts`** — Eliminar todo lo relacionado con generación:
+- Eliminar import de `@elevenlabs/elevenlabs-js`
+- Eliminar `StoryScript`, `StoryWithImages`, `VoiceDescriptorSchema`, `VoiceDescriptor`
+- Eliminar `StoryMetadataWithDetails`, `ContentItemWithDetails`
+- Mantener solo los schemas del timeline (que se reescribirán en Commit 2)
+
+**`.gitignore`** — Añadir:
+```
+.env
+```
+(ya está, pero confirmar que no hay `.env` trackeado)
+
+### Después del commit:
+- `npm install` para actualizar lock
+- El proyecto compila pero sigue usando el formato v1 de timeline
+
+---
+
+## Commit 2: `feat: define multi-track timeline v2 schema`
+
+**El contrato de datos. El corazón del sistema.**
+
+### Archivos a CREAR/REESCRIBIR:
+
+**`src/lib/types.ts`** — Schema Zod completo del timeline v2:
+```typescript
+// Tipos de clip: image, video, text, audio
+// Transiciones: fade, blur, none
+// Animations: scale (extensible después)
+// Track: { id, type, zIndex?, clips[] }
+// Timeline: { version, fps, width, height, tracks[] }
+```
+
+Decisiones del schema:
+- `version: "2.0"` (para futura compat)
+- `fps`, `width`, `height` opcionales con defaults (30, 1080, 1920)
+- `durationMs` NO existe — se calcula
+- Cada clip tiene `startMs` + `endMs` (posición absoluta en el timeline global)
+- Transitions y animations opcionales
+- `fit` para image/video: `"cover" | "contain" | "fill"` (default `"cover"`)
+- Audio: `volume` (0-1), `fadeInMs`, `fadeOutMs`
+
+**`src/lib/constants.ts`** — Limpiar:
+```typescript
+export const DEFAULT_FPS = 30;
+export const DEFAULT_WIDTH = 1080;
+export const DEFAULT_HEIGHT = 1920;
+```
+Eliminar `INTRO_DURATION`, `IMAGE_WIDTH`, `IMAGE_HEIGHT`.
+
+**`src/lib/utils.ts`** — Reescribir con utilidades para v2:
+```typescript
+export const msToFrames = (ms: number, fps: number) => Math.round((ms / 1000) * fps);
+export const framesToMs = (frames: number, fps: number) => (frames / fps) * 1000;
+export const calculateTimelineDuration = (timeline: Timeline) => { /* max endMs de todos los clips */ };
+export const getProjectPath = (project: string) => `content/${project}`;
+export const getTimelinePath = (project: string) => `content/${project}/timeline.json`;
+```
+
+### Después del commit:
+- Los tipos están definidos pero nada los usa aún
+- El código antiguo (`AIVideo.tsx`, etc.) no compila → es temporal
+
+---
+
+## Commit 3: `feat: implement multi-track renderer core`
+
+**Los componentes que leen el timeline y renderizan tracks.**
+
+### Archivos a CREAR:
+
+**`src/components/MultiTrackComposition.tsx`**
+- Recibe el timeline (ya parseado)
+- Calcula `durationInFrames` del max `endMs` de todos los clips
+- Ordena tracks visuales por `zIndex`
+- Renderiza cada track con `<TrackRenderer>`
+- Tracks de audio van aparte (sin zIndex, sin AbsoluteFill)
+
+**`src/components/TrackRenderer.tsx`**
+- Recibe un track
+- Itera `clips[]`
+- Para cada clip: calcula `from` y `durationInFrames`, lo wrappea en `<Sequence>`
+- Hace switch por `clip.type` → delega al componente correcto
+
+### Después del commit:
+- El core del multi-track funciona pero los clips individuales aún no existen
+
+---
+
+## Commit 4: `feat: implement image clip with transitions and animations`
+
+### Archivos a CREAR:
+
+**`src/components/clips/ImageClip.tsx`**
+- Migrar lógica de `Background.tsx`
+- Soporte para `fit` (cover/contain/fill)
+- Enter/exit transitions (fade, blur)
+- Animations (scale → Ken Burns)
+- Usa `<Img>` de Remotion con `staticFile()`
+
+**`src/components/transitions/useTransition.ts`**
+- Hook que recibe `enterTransition`, `exitTransition`, clip duration, frame actual
+- Devuelve `{ opacity, blur }` calculados
+- Reutilizable por todos los clips visuales
+
+### Después del commit:
+- Las imágenes se renderizan correctamente en el multi-track
+
+---
+
+## Commit 5: `feat: implement text, audio and video clips`
+
+### Archivos a CREAR:
+
+**`src/components/clips/TextClip.tsx`**
+- Migrar lógica de `Subtitle.tsx` + `Word.tsx`
+- Posición configurable (top/center/bottom)
+- Estilos configurables (fontSize, color, fontFamily)
+- Animación de entrada (spring)
+
+**`src/components/clips/AudioClip.tsx`**
+- Usa `<Audio>` de `@remotion/media`
+- Soporte para `volume` (constante o con fade)
+- `fadeInMs` / `fadeOutMs` usando `interpolate` de Remotion
+
+**`src/components/clips/VideoClip.tsx`**
+- Usa `<OffthreadVideo>` de Remotion
+- Soporte para `trimStartMs` / `trimEndMs`
+- Soporte para `volume` y `fit`
+
+### Después del commit:
+- Todos los tipos de clip del MVP funcionan
+
+---
+
+## Commit 6: `feat: wire up Root.tsx and adapt project discovery`
+
+### Archivos a MODIFICAR:
+
+**`src/Root.tsx`**
+- Usa `MultiTrackComposition` en vez de `AIVideo`
+- Lee `timeline.json` con el nuevo schema v2
+- Calcula duración automáticamente
+- Usa `fps`, `width`, `height` del timeline (o defaults)
+
+### Archivos a ELIMINAR (código legacy):
+- `src/components/AIVideo.tsx`
+- `src/components/Background.tsx`
+- `src/components/Subtitle.tsx`
+- `src/components/Word.tsx`
+
+### Después del commit:
+- El renderer funciona end-to-end con el schema v2
+- Pero el ejemplo aún tiene el formato v1
+
+---
+
+## Commit 7: `feat: migrate history-of-venus example to v2 format`
+
+### Archivos a MODIFICAR:
+
+**`public/content/history-of-venus/timeline.json`**
+- Convertir del formato flat (`elements`, `text`, `audio`) al formato multi-track v2
+- Adaptar `imageUrl: "uuid"` → `src: "images/uuid.png"` (paths relativos)
+- Adaptar `audioUrl: "uuid"` → `src: "audio/uuid.mp3"`
+- Restructurar en tracks:
+  - Track "background" (visual, zIndex 0) → las imágenes
+  - Track "subtitles" (visual, zIndex 1) → los textos
+  - Track "narration" (audio) → los audios
+
+### Después del commit:
+- `npm run dev` funciona y muestra el ejemplo "History of Venus" correctamente
+- **El MVP está completo** ✅
+
+---
+
+## Commit 8 (opcional): `docs: update plan.md with v2 architecture`
+
+- Actualizar `plan.md` para reflejar la arquitectura real del MVP
+- Documentar el schema v2
+- Documentar qué viene post-MVP (components, lottie, más transiciones, etc.)
+
+---
+
+## Resumen visual:
+
+| Commit | Tipo | Qué hace |
+|---|---|---|
+| 1 | 🧹 Limpieza | Elimina CLI, deps, legacy |
+| 2 | 📐 Contrato | Define schema v2 + tipos + utils |
+| 3 | 🏗️ Core | MultiTrackComposition + TrackRenderer |
+| 4 | 🖼️ Clip | ImageClip + useTransition |
+| 5 | 🎵📝🎬 Clips | TextClip + AudioClip + VideoClip |
+| 6 | 🔌 Wiring | Root.tsx + eliminar código old |
+| 7 | 📦 Ejemplo | Migrar timeline de ejemplo a v2 |
+| 8 | 📝 Docs | Actualizar plan.md |
+
+¿Te parece bien? ¿Quieres ajustar algo (juntar commits, separar, cambiar orden)? Si estás conforme, puedes toggle a **Act Mode** y empezamos con el Commit 1 (limpieza).

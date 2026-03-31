@@ -1,4 +1,3 @@
-import { CharacterAlignmentResponseModel } from "@elevenlabs/elevenlabs-js/api";
 import { z } from "zod";
 
 const BackgroundTransitionTypeSchema = z.union([
@@ -66,35 +65,3 @@ export {
   TimelineElementSchema,
   TimelineSchema,
 };
-
-export const StoryScript = z.object({
-  text: z.string(),
-});
-
-export const StoryWithImages = z.object({
-  result: z.array(
-    z.object({
-      text: z.string(),
-      imageDescription: z.string(),
-    }),
-  ),
-});
-
-export const VoiceDescriptorSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-});
-
-export type VoiceDescriptor = z.infer<typeof VoiceDescriptorSchema>;
-
-export interface StoryMetadataWithDetails {
-  shortTitle: string;
-  content: ContentItemWithDetails[];
-}
-
-export interface ContentItemWithDetails {
-  text: string;
-  imageDescription: string;
-  uid: string;
-  audioTimestamps: CharacterAlignmentResponseModel;
-}
