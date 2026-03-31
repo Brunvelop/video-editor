@@ -1,8 +1,11 @@
 import React from "react";
 import { Sequence } from "remotion";
-import { AudioClip, Track, VisualClip } from "../lib/types";
+import { AudioClip as AudioClipType, Track, VisualClip } from "../lib/types";
 import { msToFrames } from "../lib/utils";
+import { AudioClip } from "./clips/AudioClip";
 import { ImageClip } from "./clips/ImageClip";
+import { TextClip } from "./clips/TextClip";
+import { VideoClip } from "./clips/VideoClip";
 
 interface TrackRendererProps {
   track: Track;
@@ -27,7 +30,7 @@ export const TrackRenderer: React.FC<TrackRendererProps> = ({
             from={from}
             durationInFrames={durationInFrames}
           >
-            <ClipRenderer clip={clip} fps={fps} projectPath={projectPath} />
+            <ClipRenderer clip={clip} projectPath={projectPath} />
           </Sequence>
         );
       })}
@@ -36,20 +39,18 @@ export const TrackRenderer: React.FC<TrackRendererProps> = ({
 };
 
 const ClipRenderer: React.FC<{
-  clip: VisualClip | AudioClip;
-  fps: number;
+  clip: VisualClip | AudioClipType;
   projectPath: string;
 }> = ({ clip, projectPath }) => {
   switch (clip.type) {
     case "image":
       return <ImageClip clip={clip} projectPath={projectPath} />;
     case "video":
-      return <div>VideoClip placeholder: {clip.src}</div>;
+      return <VideoClip clip={clip} projectPath={projectPath} />;
     case "text":
-      return <div>TextClip placeholder: {clip.text}</div>;
+      return <TextClip clip={clip} />;
     case "audio":
-      // AudioClip component will go here
-      return null;
+      return <AudioClip clip={clip} projectPath={projectPath} />;
     default:
       return null;
   }
