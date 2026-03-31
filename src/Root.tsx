@@ -1,37 +1,63 @@
-import { Composition, getStaticFiles } from "remotion";
-import { AIVideo, aiVideoSchema } from "./components/AIVideo";
-import { FPS, INTRO_DURATION } from "./lib/constants";
-import { getTimelinePath, loadTimelineFromFile } from "./lib/utils";
+import React from "react";
+import { Composition, getStaticFiles, staticFile } from "remotion";
+import { z } from "zod";
+import { MultiTrackComposition } from "./components/MultiTrackComposition";
+import { TimelineSchema } from "./lib/types";
+import {
+  calculateTimelineDuration,
+  msToFrames,
+  getProjectPath,
+} from "./lib/utils";
+
+const compositionPropsSchema = z.object({
+  timeline: TimelineSchema.nullable(),
+  projectPath: z.string(),
+});
+
+type CompositionProps = z.infer<typeof compositionPropsSchema>;
 
 export const RemotionRoot: React.FC = () => {
   const staticFiles = getStaticFiles();
-  const timelines = staticFiles
+  const projects = staticFiles
     .filter((file) => file.name.endsWith("timeline.json"))
     .map((file) => file.name.split("/")[1]);
 
   return (
     <>
-      {timelines.map((storyName) => (
+      {projects.map((projectName) => (
         <Composition
-          id={storyName}
-          component={AIVideo}
-          fps={FPS}
+          key={projectName}
+          id={projectName}
+          component={MultiTrackComposition as React.ComponentType<CompositionProps>}
+          fps={30}
           width={1080}
           height={1920}
-          schema={aiVideoSchema}
+          schema={compositionPropsSchema}
           defaultProps={{
             timeline: null,
+            projectPath: getProjectPath(projectName),
           }}
           calculateMetadata={async ({ props }) => {
-            const { lengthFrames, timeline } = await loadTimelineFromFile(
-              getTimelinePath(storyName),
+            const timelineUrl = staticFile(
+              `content/${projectName}/timeline.json`,
             );
+            const response = await fetch(timelineUrl);
+            const json = await response.json();
+            const timeline = TimelineSchema.parse(json);
+
+            const fps = timeline.fps;
+            const durationMs = calculateTimelineDuration(timeline);
+            const durationInFrames = msToFrames(durationMs, fps);
 
             return {
-              durationInFrames: lengthFrames + INTRO_DURATION,
+              fps,
+              width: timeline.width,
+              height: timeline.height,
+              durationInFrames,
               props: {
                 ...props,
                 timeline,
+                projectPath: getProjectPath(projectName),
               },
             };
           }}

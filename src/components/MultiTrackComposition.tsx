@@ -4,7 +4,7 @@ import { AudioTrack, Timeline, VisualTrack } from "../lib/types";
 import { TrackRenderer } from "./TrackRenderer";
 
 interface MultiTrackCompositionProps {
-  timeline: Timeline;
+  timeline: Timeline | null;
   projectPath: string;
 }
 
@@ -12,6 +12,8 @@ export const MultiTrackComposition: React.FC<MultiTrackCompositionProps> = ({
   timeline,
   projectPath,
 }) => {
+  if (!timeline) return null;
+
   const fps = timeline.fps;
 
   // Separate visual and audio tracks
