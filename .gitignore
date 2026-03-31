@@ -5,3 +5,8 @@ dist
 
 # Ignore the output video from Git but not videos you import into src/.
 out
+
+# Ignore all generated project content (produced by Python pipeline).
+# history-of-venus is kept as a built-in example for the renderer.
+public/content/*
+!public/content/history-of-venus/
