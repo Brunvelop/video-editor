@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "remotion studio",
     "build": "remotion bundle",
+    "render": "remotion render",
+    "render:fast": "remotion render --gl=angle --concurrency=100%",
+    "render:draft": "remotion render --gl=angle --concurrency=100% --scale=0.5 --jpeg-quality=60",
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc"
   },
