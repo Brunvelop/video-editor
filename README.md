@@ -212,6 +212,67 @@ Displays a text overlay with animated entrance and configurable style.
 
 ---
 
+#### `hero-title`
+
+Animated hero title card with a generative atmospheric background. Designed for cinematic intros, psychological hooks, and high-impact moments. Three animation presets available.
+
+```json
+{
+  "type": "hero-title",
+  "startMs": 0,
+  "endMs": 5000,
+  "title": "LA MENTE",
+  "subtitle": "No es lo que crees",
+  "animation": "cinematic",
+  "showBackground": true,
+  "style": {
+    "titleFontSize": 130,
+    "subtitleFontSize": 34,
+    "titleColor": "#FFFFFF",
+    "subtitleColor": "rgba(255,255,255,0.60)",
+    "accentColor": "#00F0FF",
+    "titleFontFamily": "Oswald",
+    "subtitleFontFamily": "Space Mono"
+  },
+  "enterTransition": { "type": "fade", "durationMs": 400 },
+  "exitTransition": { "type": "fade", "durationMs": 600 }
+}
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `title` | `string` | — | Main title text (required) |
+| `subtitle` | `string` | — | Optional subtitle beneath the title |
+| `animation` | `"cinematic" \| "glitch" \| "typewriter"` | `"cinematic"` | Animation preset |
+| `showBackground` | `boolean` | `true` | Render the generative dark background. Set to `false` when placing over video/image |
+| `style.titleFontSize` | `number` | `130` | Max font size for the title (auto-fits to video width) |
+| `style.subtitleFontSize` | `number` | `34` | Font size for the subtitle |
+| `style.titleColor` | `string` | `#FFFFFF` | CSS color for the title |
+| `style.subtitleColor` | `string` | `rgba(255,255,255,0.60)` | CSS color for the subtitle |
+| `style.accentColor` | `string` | `#00F0FF` | Color used for lines, cursor, glow, and background blobs |
+| `style.titleFontFamily` | `string` | `Oswald` | Font for the title |
+| `style.subtitleFontFamily` | `string` | `Space Mono` | Font for the subtitle |
+| `enterTransition` | `Transition` | — | Transition when clip starts |
+| `exitTransition` | `Transition` | — | Transition when clip ends |
+
+**Animation presets:**
+
+| Preset | Description |
+|---|---|
+| `"cinematic"` | Horizontal glowing lines expand from centre → title fades in from blur/scale-down → subtitle rises up. Epic movie-opening feel. |
+| `"glitch"` | Intense RGB-split text-shadow + Y-axis jitter that decays to clean over ~1.3s. Deterministic (no randomness — renders consistently). Artifact strips drift during the glitch phase. |
+| `"typewriter"` | Characters revealed progressively with a blinking cursor bar, terminal-style prompt label, and left-bordered subtitle reveal. CRT phosphor flicker effect. |
+
+**Background layers** (when `showBackground: true`):
+- Deep navy base (`#06070f`)
+- Three animated gradient blobs tinted with `accentColor` (breathe slowly at 0.18 cycles/sec)
+- Purple/crimson undertone blob for psychological depth
+- SVG fractal noise grain overlay
+- Radial vignette (dark edges)
+- Subtle CRT scan lines
+
+---
+
 #### `audio`
 
 Plays an audio file with optional volume fades.
@@ -379,6 +440,7 @@ src/
     │   ├── ImageClip.tsx                 # <Img> with fit, transitions, scale animations
     │   ├── VideoClip.tsx                 # <OffthreadVideo> with trim, volume, transitions
     │   ├── TextClip.tsx                  # Text with spring entrance + fitText
+    │   ├── HeroTitleClip.tsx             # Hero title: cinematic/glitch/typewriter + generative bg
     │   └── AudioClip.tsx                 # <Audio> with volume fades
     └── transitions/
         └── useTransition.ts              # Hook: computes opacity/filter from transition config

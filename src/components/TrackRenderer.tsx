@@ -3,6 +3,7 @@ import { Sequence } from "remotion";
 import { AudioClip as AudioClipType, Track, VisualClip } from "../lib/types";
 import { msToFrames } from "../lib/utils";
 import { AudioClip } from "./clips/AudioClip";
+import { HeroTitleClip } from "./clips/HeroTitleClip";
 import { ImageClip } from "./clips/ImageClip";
 import { TextClip } from "./clips/TextClip";
 import { VideoClip } from "./clips/VideoClip";
@@ -49,6 +50,8 @@ const ClipRenderer: React.FC<{
       return <VideoClip clip={clip} projectPath={projectPath} />;
     case "text":
       return <TextClip clip={clip} />;
+    case "hero-title":
+      return <HeroTitleClip clip={clip} />;
     case "audio":
       return <AudioClip clip={clip} projectPath={projectPath} />;
     default:

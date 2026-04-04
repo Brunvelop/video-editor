@@ -52,6 +52,29 @@ const VideoClipSchema = BaseClipSchema.extend({
   animations: z.array(AnimationSchema).optional(),
 });
 
+// ─── Hero Title Clip ───────────────────────────────────────────────────────────
+
+const HeroTitleStyleSchema = z.object({
+  titleFontSize: z.number().optional(),
+  subtitleFontSize: z.number().optional(),
+  titleColor: z.string().optional(),
+  subtitleColor: z.string().optional(),
+  accentColor: z.string().optional(),
+  titleFontFamily: z.string().optional(),
+  subtitleFontFamily: z.string().optional(),
+});
+
+const HeroTitleClipSchema = BaseClipSchema.extend({
+  type: z.literal("hero-title"),
+  title: z.string(),
+  subtitle: z.string().optional(),
+  animation: z.enum(["glitch", "typewriter", "cinematic"]).default("cinematic"),
+  showBackground: z.boolean().default(true),
+  style: HeroTitleStyleSchema.optional(),
+  enterTransition: TransitionSchema.optional(),
+  exitTransition: TransitionSchema.optional(),
+});
+
 // ─── Text Clip ─────────────────────────────────────────────────────────────────
 
 const TextStyleSchema = z.object({
@@ -85,6 +108,7 @@ const VisualClipSchema = z.discriminatedUnion("type", [
   ImageClipSchema,
   VideoClipSchema,
   TextClipSchema,
+  HeroTitleClipSchema,
 ]);
 
 // ─── Tracks ────────────────────────────────────────────────────────────────────
@@ -126,6 +150,8 @@ export type TextStyle = z.infer<typeof TextStyleSchema>;
 export type ImageClip = z.infer<typeof ImageClipSchema>;
 export type VideoClip = z.infer<typeof VideoClipSchema>;
 export type TextClip = z.infer<typeof TextClipSchema>;
+export type HeroTitleClip = z.infer<typeof HeroTitleClipSchema>;
+export type HeroTitleStyle = z.infer<typeof HeroTitleStyleSchema>;
 export type AudioClip = z.infer<typeof AudioClipSchema>;
 export type VisualClip = z.infer<typeof VisualClipSchema>;
 
@@ -140,6 +166,8 @@ export {
   ScaleAnimationSchema,
   AnimationSchema,
   TextStyleSchema,
+  HeroTitleStyleSchema,
+  HeroTitleClipSchema,
   ImageClipSchema,
   VideoClipSchema,
   TextClipSchema,
