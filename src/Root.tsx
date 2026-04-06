@@ -30,8 +30,8 @@ export const RemotionRoot: React.FC = () => {
           id={projectName}
           component={MultiTrackComposition as React.ComponentType<CompositionProps>}
           fps={30}
-          width={1080}
-          height={1920}
+          width={1920}
+          height={1080}
           schema={compositionPropsSchema}
           defaultProps={{
             timeline: null,
