@@ -8,5 +8,7 @@ out
 
 # Ignore all generated project content (produced by Python pipeline).
 # history-of-venus is kept as a built-in example for the renderer.
+# library/ contains shared static assets (music, characters) — not generated.
 public/content/*
 !public/content/history-of-venus/
+!public/content/library/
