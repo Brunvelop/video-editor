@@ -8,7 +8,14 @@ out
 
 # Ignore all generated project content (produced by Python pipeline).
 # history-of-venus is kept as a built-in example for the renderer.
-# library/ contains shared static assets (music, characters) — not generated.
+# library/ directory structure is tracked (.gitkeep), but asset files are not.
 public/content/*
 !public/content/history-of-venus/
 !public/content/library/
+public/content/library/**/*.png
+public/content/library/**/*.jpg
+public/content/library/**/*.jpeg
+public/content/library/**/*.webp
+public/content/library/**/*.mp3
+public/content/library/**/*.wav
+public/content/library/**/*.mp4
