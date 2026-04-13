@@ -7,3 +7,9 @@ import { Config } from "@remotion/cli/config";
 
 Config.setVideoImageFormat("jpeg");
 Config.setOverwriteOutput(true);
+
+// Enable GPU acceleration in headless Chromium for all renders.
+// This accelerates: filter:blur(), transform, linear/radial-gradient(),
+// box-shadow, text-shadow, mix-blend-mode and 2D Canvas operations.
+// On Linux the ANGLE renderer uses EGL under the hood.
+Config.setChromiumOpenGlRenderer("angle");
