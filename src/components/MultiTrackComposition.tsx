@@ -28,16 +28,16 @@ export const MultiTrackComposition: React.FC<MultiTrackCompositionProps> = ({
   return (
     <AbsoluteFill>
       {/* Visual tracks: each wrapped in AbsoluteFill, stacked by zIndex order */}
-      {visualTracks.map((track) => (
-        <AbsoluteFill key={track.id}>
+      {visualTracks.map((track, index) => (
+        <AbsoluteFill key={`${track.id}-${index}`}>
           <TrackRenderer track={track} fps={fps} projectPath={projectPath} />
         </AbsoluteFill>
       ))}
 
       {/* Audio tracks: no AbsoluteFill needed */}
-      {audioTracks.map((track) => (
+      {audioTracks.map((track, index) => (
         <TrackRenderer
-          key={track.id}
+          key={`${track.id}-${index}`}
           track={track}
           fps={fps}
           projectPath={projectPath}
